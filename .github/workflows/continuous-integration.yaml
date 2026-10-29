@@ -4,8 +4,13 @@ on:
   workflow_dispatch:
 jobs:
   run-tests:
-    name: Integration Tests
+    name: Integration Tests (${{ matrix.shard }}/${{ strategy.job-total }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The test classes are split over the shards by .github/scripts/test-shard.py.
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK8 FX for x64
@@ -52,11 +57,14 @@ jobs:
 
           ./mvnw clean install -DskipTests
 
+          TESTS=$(python3 .github/scripts/test-shard.py ${{ matrix.shard }} ${{ strategy.job-total }})
+
           ./mvnw
           clean
           verify
           -pl org.eclipse.jdt.ls.tests
           -am
+          -Dtest="$TESTS"
           -ntp
           -Dcompletion.timeout=120000
           -Djava.lsp.mavensearch.timeout=60
