@@ -43,5 +43,54 @@
 				<os.testArgs>-XstartOnFirstThread</os.testArgs>
 			</properties>
 		</profile>
+		<!-- CI test shards, see scripts/test-shards.py. Both take a comma-separated list of class patterns. -->
+		<profile>
+			<id>test-shard-includes</id>
+			<activation>
+				<property>
+					<name>test.shard.includes</name>
+				</property>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.eclipse.tycho</groupId>
+							<artifactId>tycho-surefire-plugin</artifactId>
+							<version>${tycho-version}</version>
+							<configuration>
+								<includes>
+									<include>${test.shard.includes}</include>
+								</includes>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
+		<profile>
+			<id>test-shard-excludes</id>
+			<activation>
+				<property>
+					<name>test.shard.excludes</name>
+				</property>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.eclipse.tycho</groupId>
+							<artifactId>tycho-surefire-plugin</artifactId>
+							<version>${tycho-version}</version>
+							<configuration>
+								<excludes>
+									<exclude>${test.shard.excludes}</exclude>
+								</excludes>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
 	</profiles>
 </project>

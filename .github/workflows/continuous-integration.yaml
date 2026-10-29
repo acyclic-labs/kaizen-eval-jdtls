@@ -4,8 +4,13 @@ on:
   workflow_dispatch:
 jobs:
   run-tests:
-    name: Integration Tests
+    name: Integration Tests (shard ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Keep in sync with the shard count passed to scripts/test-shards.py below.
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK8 FX for x64
@@ -57,6 +62,7 @@ jobs:
           verify
           -pl org.eclipse.jdt.ls.tests
           -am
+          "$(python3 scripts/test-shards.py ${{ matrix.shard }} 4)"
           -ntp
           -Dcompletion.timeout=120000
           -Djava.lsp.mavensearch.timeout=60
@@ -77,6 +83,18 @@ jobs:
         run: |
           echo "The build/test step failed (see 'Run Integration Tests' above for the real cause, e.g. a compile error) -- failing the job explicitly since that step uses continue-on-error."
           exit 1
+
+  run-tests-result:
+    # Single status for the sharded job, under the check name it had before sharding.
+    name: Integration Tests
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check shard results
+        run: |
+          echo "Shards: ${{ needs.run-tests.result }}"
+          test "${{ needs.run-tests.result }}" = success
 
   run-syntaxserver-tests:
     name: Integration Tests (Syntax Server)
